@@ -128,6 +128,20 @@ async def list_favorites(
     )
 
 
+# Статический маршрут /movies/purchased объявлен ДО динамического /movies/{movie_id}
+@router.get(
+    "/movies/purchased",
+    response_model=list[MovieListItem],
+    summary="List user's purchased movies",
+)
+async def list_purchased_movies(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    service: Annotated[MoviesService, Depends(get_movies_service)],
+) -> list[MovieListItem]:
+    """Retrieve all movies successfully purchased by the current user."""
+    return await service.list_purchased_movies(current_user.id)
+
+
 @router.get(
     "/movies/{movie_id}",
     response_model=MovieDetailResponse,
@@ -338,6 +352,9 @@ async def update_movie(
 async def delete_movie(
     movie_id: int,
     service: Annotated[MoviesService, Depends(get_movies_service)],
+    confirm_in_cart: bool = Query(
+        default=False, description="Confirm deletion if movie is present in user carts"
+    ),
 ) -> dict[str, str]:
     """Delete a movie ensuring it has not been purchased by users."""
-    return await service.delete_movie(movie_id)
+    return await service.delete_movie(movie_id, confirm_in_cart=confirm_in_cart)

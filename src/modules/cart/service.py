@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from src.modules.cart.models import Cart, CartItem
 from src.modules.cart.schemas import CartItemResponse, CartResponse
 from src.modules.movies.models import Movie
+from src.modules.orders.models import Order, OrderItem, OrderStatusEnum
 
 
 class CartService:
@@ -18,31 +19,31 @@ class CartService:
 
     async def get_or_create_cart(self, user_id: int) -> Cart:
         """Fetch existing cart or create a new one for the user."""
-        query = (
-            select(Cart)
-            .where(Cart.user_id == user_id)
-            .options(
-                selectinload(Cart.items)
-                .selectinload(CartItem.movie)
-                .selectinload(Movie.genres)
-            )
-        )
+        query = select(Cart).where(Cart.user_id == user_id)
         cart = await self.session.scalar(query)
         if not cart:
             cart = Cart(user_id=user_id)
             self.session.add(cart)
             await self.session.commit()
-            await self.session.refresh(cart, attribute_names=["items"])
+            await self.session.refresh(cart)
         return cart
 
     async def get_user_cart_response(self, user_id: int) -> CartResponse:
-        """Construct full cart response with item details, count, and total price."""
+        """Construct full cart response querying active cart items freshly from database."""
         cart = await self.get_or_create_cart(user_id)
+
+        items_query = (
+            select(CartItem)
+            .where(CartItem.cart_id == cart.id)
+            .options(selectinload(CartItem.movie).selectinload(Movie.genres))
+            .order_by(CartItem.added_at.desc())
+        )
+        cart_items = (await self.session.scalars(items_query)).all()
 
         items_response: list[CartItemResponse] = []
         total_price = Decimal("0.00")
 
-        for item in cart.items:
+        for item in cart_items:
             movie = item.movie
             if movie:
                 genres = [g.name for g in movie.genres]
@@ -69,7 +70,17 @@ class CartService:
 
     async def is_movie_purchased_by_user(self, user_id: int, movie_id: int) -> bool:
         """Check whether the user has already purchased this movie."""
-        return False
+        query = (
+            select(OrderItem.id)
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                Order.user_id == user_id,
+                Order.status == OrderStatusEnum.PAID,
+                OrderItem.movie_id == movie_id,
+            )
+        )
+        result = await self.session.scalar(query)
+        return result is not None
 
     async def add_item_to_cart(self, user_id: int, movie_id: int) -> CartResponse:
         """Add a movie to user cart after verifying purchase history and uniqueness."""
