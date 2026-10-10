@@ -69,6 +69,40 @@ services:
       redis:
         condition: service_healthy
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinema_celery_worker
+    restart: always
+    command: celery -A src.core.celery_app.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cinema_celery_beat
+    restart: always
+    command: celery -A src.core.celery_app.celery_app beat --loglevel=info
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   miniodata:
