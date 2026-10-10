@@ -11,6 +11,8 @@ from src.modules.accounts.models import UserGroup, UserGroupEnum
 from src.modules.accounts.router import router as accounts_router
 from src.modules.cart.router import router as cart_router
 from src.modules.movies.router import router as movies_router
+from src.modules.orders.router import router as orders_router
+from src.modules.payments.router import router as payments_router
 
 
 @asynccontextmanager
@@ -39,6 +41,8 @@ app = FastAPI(
 app.include_router(accounts_router, prefix="/api/v1")
 app.include_router(movies_router, prefix="/api/v1")
 app.include_router(cart_router, prefix="/api/v1")
+app.include_router(orders_router, prefix="/api/v1")
+app.include_router(payments_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["Health"])
