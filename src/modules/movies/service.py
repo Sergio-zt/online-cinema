@@ -42,7 +42,7 @@ class MoviesService:
 
     # ==================== GENRES, STARS, DIRECTORS, CERTIFICATIONS ====================
 
-    async def list_genres_with_counts(self) -> list[dict]:
+    async def list_genres_with_counts(self) -> list[dict[str]]:
         """Return all genres along with the count of movies assigned to each genre."""
         stmt = (
             select(Genre, func.count(movie_genres.c.movie_id).label("movie_count"))
