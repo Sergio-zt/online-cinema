@@ -18,9 +18,7 @@ from src.modules.movies.models import (
     MovieReaction,
     Notification,
     Star,
-    movie_directors,
     movie_genres,
-    movie_stars,
 )
 from src.modules.movies.schemas import (
     CertificationCreate,
@@ -236,7 +234,8 @@ class MoviesService:
         likes_count = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == True
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(True),
                 )
             )
             or 0
@@ -244,7 +243,8 @@ class MoviesService:
         dislikes_count = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == False
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(False),
                 )
             )
             or 0
@@ -367,7 +367,8 @@ class MoviesService:
         likes = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == True
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(True),
                 )
             )
             or 0
@@ -375,7 +376,8 @@ class MoviesService:
         dislikes = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == False
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(False),
                 )
             )
             or 0
