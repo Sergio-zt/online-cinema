@@ -105,21 +105,21 @@
 
 ```mermaid
 sequenceDiagram
-    actor U as User
+    participant U as User
     participant API as FastAPI
     participant S as Stripe
     participant C as Celery
 
-    U->>API: POST /cart/items
-    U->>API: POST /orders
-    API-->>U: Order (pending)
-    U->>API: POST /payments/checkout/{order_id}
+    U->>API: Add movie to cart
+    U->>API: Create order
+    API-->>U: Order created with status pending
+    U->>API: Request checkout for the order
     API->>S: Create Checkout Session
     S-->>U: Checkout URL
     U->>S: Pays
-    S->>API: Webhook checkout.session.completed
-    API->>API: Order → paid, Payment records, clear cart
-    API->>C: send_email_task (receipt)
+    S->>API: Webhook - checkout session completed
+    API->>API: Mark order as paid, save payment, clear cart
+    API->>C: Queue receipt email
     C-->>U: Confirmation email
 ```
 
