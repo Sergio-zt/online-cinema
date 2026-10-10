@@ -13,6 +13,8 @@ from src.core.database import Base
 import src.modules.accounts.models  # noqa: F401
 import src.modules.movies.models  # noqa: F401
 import src.modules.cart.models  # noqa: F401
+import src.modules.orders.models  # noqa: F401
+import src.modules.payments.models  # noqa: F401
 
 config = context.config
 
