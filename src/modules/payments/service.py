@@ -62,7 +62,7 @@ class PaymentsService:
                 ),
             )
 
-        line_items = []
+        line_items: list[stripe.checkout.Session.CreateParamsLineItem] = []
         for item in order.items:
             movie_name = item.movie.name if item.movie else f"Movie #{item.movie_id}"
             unit_amount = int(item.price_at_order * 100)
@@ -106,7 +106,7 @@ class PaymentsService:
                     f"Failed to communicate with "
                     f"Stripe payment provider: {str(exc)}"
                 ),
-            )
+            ) from exc
 
     async def complete_order_payment(
         self,
@@ -194,14 +194,14 @@ class PaymentsService:
         event: dict[str, Any]
         if sig_header and settings.STRIPE_WEBHOOK_SECRET != "whsec_dummy_key":
             try:
-                event = stripe.Webhook.construct_event(
+                event = stripe.Webhook.construct_event(  # type: ignore[no-untyped-call]
                     payload_bytes, sig_header, settings.STRIPE_WEBHOOK_SECRET
                 )
             except Exception as exc:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Webhook signature verification failed: {str(exc)}",
-                )
+                ) from exc
         else:
             event = json.loads(payload_bytes.decode("utf-8"))
 

@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,7 +60,7 @@ def get_movies_service(
 )
 async def list_genres(
     service: Annotated[MoviesService, Depends(get_movies_service)],
-) -> list[dict[str]]:
+) -> list[dict[str, Any]]:
     """Retrieve list of genres along with the count of movies in each genre."""
     return await service.list_genres_with_counts()
 
