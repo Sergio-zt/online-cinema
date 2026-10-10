@@ -167,7 +167,6 @@ class MoviesService:
         elif sort_by == "votes_desc":
             query = query.order_by(Movie.votes.desc(), Movie.id.asc())
         else:
-            # Default: imdb_desc
             query = query.order_by(Movie.imdb.desc(), Movie.id.asc())
 
         # Pagination & Eager Loading
@@ -193,6 +192,27 @@ class MoviesService:
             pages=pages,
         )
 
+    async def list_purchased_movies(self, user_id: int) -> list[MovieListItem]:
+        """Retrieve all movies successfully purchased by the user."""
+        from src.modules.orders.models import Order, OrderItem, OrderStatusEnum
+
+        query = (
+            select(Movie)
+            .distinct()
+            .join(OrderItem, Movie.id == OrderItem.movie_id)
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                Order.user_id == user_id,
+                Order.status == OrderStatusEnum.PAID,
+            )
+            .options(
+                selectinload(Movie.genres),
+                selectinload(Movie.certification),
+            )
+        )
+        movies = (await self.session.scalars(query)).all()
+        return [MovieListItem.model_validate(m) for m in movies]
+
     async def get_movie_detail(
         self, movie_id: int, current_user_id: Optional[int] = None
     ) -> MovieDetailResponse:
@@ -213,7 +233,6 @@ class MoviesService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found."
             )
 
-        # Count likes & dislikes
         likes_count = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
@@ -231,13 +250,11 @@ class MoviesService:
             or 0
         )
 
-        # Calculate average user rating
         avg_rating = await self.session.scalar(
             select(func.avg(MovieRating.rating)).where(MovieRating.movie_id == movie_id)
         )
         average_user_rating = round(float(avg_rating), 1) if avg_rating else None
 
-        # Check if favorite for current user
         is_favorite = False
         if current_user_id:
             fav = await self.session.scalar(
@@ -562,11 +579,45 @@ class MoviesService:
     async def delete_movie(
         self, movie_id: int, confirm_in_cart: bool = False
     ) -> dict[str, str]:
-        """Delete a movie ensuring it has not been purchased by users."""
+        """
+        Delete a movie with strict business constraints:
+        1. Prevent deletion if movie has been purchased by at least one user.
+        2. Warn/notify if movie is present in user carts.
+        """
         movie = await self.session.scalar(select(Movie).where(Movie.id == movie_id))
         if not movie:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found."
+            )
+
+        from src.modules.orders.models import Order, OrderItem, OrderStatusEnum
+
+        has_purchases = await self.session.scalar(
+            select(OrderItem.id)
+            .join(Order, OrderItem.order_id == Order.id)
+            .where(
+                Order.status == OrderStatusEnum.PAID,
+                OrderItem.movie_id == movie_id,
+            )
+        )
+        if has_purchases:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete movie: it has already been purchased by at least one user.",
+            )
+
+        from src.modules.cart.models import CartItem
+
+        in_cart_count = await self.session.scalar(
+            select(func.count(CartItem.id)).where(CartItem.movie_id == movie_id)
+        )
+        if in_cart_count and not confirm_in_cart:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Warning: This movie is present in {in_cart_count} user cart(s). "
+                    f"Pass confirm_in_cart=true query parameter to confirm deletion."
+                ),
             )
 
         await self.session.delete(movie)
