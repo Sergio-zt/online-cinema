@@ -10,7 +10,8 @@ from src.modules.accounts.models import ActivationToken
 
 @shared_task(name="src.tasks.cleaners.clean_expired_activation_tokens")
 def clean_expired_activation_tokens() -> int:
-    """Periodic Celery Beat task to purge expired activation tokens from the database."""
+    """Periodic Celery Beat task to purge expired
+    activation tokens from the database."""
 
     async def _clean() -> int:
         async with async_session_maker() as session:

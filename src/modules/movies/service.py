@@ -486,7 +486,10 @@ class MoviesService:
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A movie with the same title, release year, and duration already exists.",
+                detail=(
+                    "A movie with the same title, release year, "
+                    "and duration already exists."
+                ),
             )
 
         genres = (
@@ -605,7 +608,10 @@ class MoviesService:
         if has_purchases:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete movie: it has already been purchased by at least one user.",
+                detail=(
+                    "Cannot delete movie: it has already been purchased "
+                    "by at least one user."
+                ),
             )
 
         from src.modules.cart.models import CartItem

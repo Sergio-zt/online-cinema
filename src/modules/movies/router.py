@@ -85,7 +85,10 @@ async def list_movies(
     certification_id: Optional[int] = Query(default=None),
     sort_by: Optional[str] = Query(
         default="imdb_desc",
-        description="Sort by: price_asc, price_desc, year_asc, year_desc, imdb_asc, imdb_desc, votes_desc",
+        description=(
+            "Sort by: price_asc, price_desc, year_asc, year_desc, "
+            "imdb_asc, imdb_desc, votes_desc"
+        ),
     ),
 ) -> PaginatedResponse[MovieListItem]:
     """Browse catalog with full filtering, sorting, searching, and pagination."""

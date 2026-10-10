@@ -73,7 +73,8 @@ def create_access_token(
 
 
 def create_refresh_token(subject: str | int) -> tuple[str, datetime]:
-    """Create a signed JWT refresh token and return the token string and expiration timestamp."""
+    """Create a signed JWT refresh token and return the token string
+    and expiration timestamp."""
     expire = datetime.now(timezone.utc) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
     )

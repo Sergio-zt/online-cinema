@@ -25,7 +25,8 @@ docs_security = HTTPBasic()
 def verify_docs_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(docs_security)],
 ) -> str:
-    """Validate HTTP Basic credentials to restrict Swagger/OpenAPI documentation access."""
+    """Validate HTTP Basic credentials to restrict
+    Swagger/OpenAPI documentation access."""
     correct_username = secrets.compare_digest(credentials.username, "admin")
     correct_password = secrets.compare_digest(credentials.password, "cinema_admin")
     if not (correct_username and correct_password):

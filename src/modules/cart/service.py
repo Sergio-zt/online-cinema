@@ -29,7 +29,8 @@ class CartService:
         return cart
 
     async def get_user_cart_response(self, user_id: int) -> CartResponse:
-        """Construct full cart response querying active cart items freshly from database."""
+        """Construct full cart response querying active
+        cart items freshly from database."""
         cart = await self.get_or_create_cart(user_id)
 
         items_query = (
@@ -94,7 +95,10 @@ class CartService:
         if already_purchased:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You have already purchased this movie. Repeat purchases are not allowed.",
+                detail=(
+                    "You have already purchased this movie. "
+                    "Repeat purchases are not allowed."
+                ),
             )
 
         cart = await self.get_or_create_cart(user_id)
@@ -138,5 +142,6 @@ class CartService:
         return await self.get_user_cart_response(user_id)
 
     async def admin_get_user_cart(self, target_user_id: int) -> CartResponse:
-        """Allow administrators to view any user's cart for analysis or troubleshooting."""
+        """Allow administrators to view any user's cart for
+        analysis or troubleshooting."""
         return await self.get_user_cart_response(target_user_id)

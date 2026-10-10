@@ -10,7 +10,8 @@ from src.core.config import settings
 from src.core.database import get_async_session
 from src.main import app
 
-# Create test engine with NullPool to prevent asyncpg connection sharing across asyncio loops
+# Create test engine with NullPool to prevent asyncpg
+# connection sharing across asyncio loops
 test_engine = create_async_engine(
     settings.async_database_url,
     poolclass=NullPool,
