@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import distinct, func, or_, select
@@ -22,6 +22,7 @@ from src.modules.movies.models import (
 )
 from src.modules.movies.schemas import (
     CertificationCreate,
+    CertificationResponse,
     DirectorCreate,
     GenreCreate,
     MovieCreate,
@@ -42,7 +43,7 @@ class MoviesService:
 
     # ==================== GENRES, STARS, DIRECTORS, CERTIFICATIONS ====================
 
-    async def list_genres_with_counts(self) -> list[dict[str, str]]:
+    async def list_genres_with_counts(self) -> list[dict[str, Any]]:
         """Return all genres along with the count of movies assigned to each genre."""
         stmt = (
             select(Genre, func.count(movie_genres.c.movie_id).label("movie_count"))
@@ -277,7 +278,7 @@ class MoviesService:
             meta_score=movie.meta_score,
             gross=movie.gross,
             description=movie.description,
-            certification=movie.certification,
+            certification=CertificationResponse.model_validate(movie.certification),
             genres=movie.genres,
             directors=movie.directors,
             stars=movie.stars,
