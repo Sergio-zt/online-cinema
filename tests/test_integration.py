@@ -193,7 +193,7 @@ async def test_registration_activation_and_token_refresh(
     # 3. Retrieve token and activate
     user_record = await db_session.scalar(select(User).where(User.email == email))
     token_record = await db_session.scalar(
-        select(ActivationToken).where(ActivationToken.user_id == user_record.id)  # type: ignore[union-attr]
+        select(ActivationToken).where(ActivationToken.user_id == user_record.id)
     )
     act_resp = await client.post(
         "/api/v1/accounts/activate",

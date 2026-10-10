@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 from sqlalchemy import distinct, func, or_, select
@@ -18,14 +18,15 @@ from src.modules.movies.models import (
     MovieReaction,
     Notification,
     Star,
-    movie_directors,
     movie_genres,
-    movie_stars,
 )
 from src.modules.movies.schemas import (
     CertificationCreate,
+    CertificationResponse,
     DirectorCreate,
+    DirectorResponse,
     GenreCreate,
+    GenreResponse,
     MovieCreate,
     MovieDetailResponse,
     MovieListItem,
@@ -33,6 +34,7 @@ from src.modules.movies.schemas import (
     MovieUpdate,
     PaginatedResponse,
     StarCreate,
+    StarResponse,
 )
 
 
@@ -44,7 +46,7 @@ class MoviesService:
 
     # ==================== GENRES, STARS, DIRECTORS, CERTIFICATIONS ====================
 
-    async def list_genres_with_counts(self) -> list[dict]:
+    async def list_genres_with_counts(self) -> list[dict[str, Any]]:
         """Return all genres along with the count of movies assigned to each genre."""
         stmt = (
             select(Genre, func.count(movie_genres.c.movie_id).label("movie_count"))
@@ -236,7 +238,8 @@ class MoviesService:
         likes_count = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == True
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(True),
                 )
             )
             or 0
@@ -244,7 +247,8 @@ class MoviesService:
         dislikes_count = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == False
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(False),
                 )
             )
             or 0
@@ -277,10 +281,10 @@ class MoviesService:
             meta_score=movie.meta_score,
             gross=movie.gross,
             description=movie.description,
-            certification=movie.certification,
-            genres=movie.genres,
-            directors=movie.directors,
-            stars=movie.stars,
+            certification=CertificationResponse.model_validate(movie.certification),
+            genres=[GenreResponse.model_validate(g) for g in movie.genres],
+            directors=[DirectorResponse.model_validate(d) for d in movie.directors],
+            stars=[StarResponse.model_validate(s) for s in movie.stars],
             likes_count=likes_count,
             dislikes_count=dislikes_count,
             average_user_rating=average_user_rating,
@@ -367,7 +371,8 @@ class MoviesService:
         likes = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == True
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(True),
                 )
             )
             or 0
@@ -375,7 +380,8 @@ class MoviesService:
         dislikes = (
             await self.session.scalar(
                 select(func.count(MovieReaction.id)).where(
-                    MovieReaction.movie_id == movie_id, MovieReaction.is_like == False
+                    MovieReaction.movie_id == movie_id,
+                    MovieReaction.is_like.is_(False),
                 )
             )
             or 0
@@ -484,7 +490,10 @@ class MoviesService:
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A movie with the same title, release year, and duration already exists.",
+                detail=(
+                    "A movie with the same title, release year, "
+                    "and duration already exists."
+                ),
             )
 
         genres = (
@@ -603,7 +612,10 @@ class MoviesService:
         if has_purchases:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete movie: it has already been purchased by at least one user.",
+                detail=(
+                    "Cannot delete movie: it has already been purchased "
+                    "by at least one user."
+                ),
             )
 
         from src.modules.cart.models import CartItem

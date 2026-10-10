@@ -12,12 +12,12 @@ from src.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: str) -> Any:
     """Verify a plain password against the stored bcrypt hash."""
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def get_password_hash(password: str) -> str:
+def get_password_hash(password: str) -> Any:
     """Generate a bcrypt hash from the given plain password."""
     return pwd_context.hash(password)
 
@@ -73,7 +73,8 @@ def create_access_token(
 
 
 def create_refresh_token(subject: str | int) -> tuple[str, datetime]:
-    """Create a signed JWT refresh token and return the token string and expiration timestamp."""
+    """Create a signed JWT refresh token and return the token string
+    and expiration timestamp."""
     expire = datetime.now(timezone.utc) + timedelta(
         days=settings.REFRESH_TOKEN_EXPIRE_DAYS
     )

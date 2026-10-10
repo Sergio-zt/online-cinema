@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Awaitable
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -59,7 +59,9 @@ async def get_current_active_user(
     return current_user
 
 
-def require_roles(*allowed_roles: UserGroupEnum) -> Callable[..., User]:
+def require_roles(
+    *allowed_roles: UserGroupEnum,
+) -> Callable[..., Awaitable[User]]:
     """Dependency factory enforcing role-based access control (RBAC)."""
 
     async def role_checker(

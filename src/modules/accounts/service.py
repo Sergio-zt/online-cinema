@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import delete, select
@@ -42,7 +41,8 @@ class AccountsService:
         self.session = session
 
     async def register_user(self, data: UserRegisterRequest) -> User:
-        """Register a new user, create an empty profile, and dispatch an activation email."""
+        """Register a new user, create an empty profile,
+        and dispatch an activation email."""
         # 1. Ensure email uniqueness
         existing_user = await self.session.scalar(
             select(User).where(User.email == data.email)
@@ -98,11 +98,13 @@ class AccountsService:
             to_email=new_user.email,
             subject="Activate your Online Cinema account",
             body_text=(
-                f"Welcome! Please activate your account within 24 hours using this link: {activation_link}"
+                f"Welcome! Please activate your account within "
+                f"24 hours using this link: {activation_link}"
             ),
             body_html=(
                 f"<p>Welcome to Online Cinema!</p>"
-                f"<p>Please click the link below to activate your account (valid for 24 hours):</p>"
+                f"<p>Please click the link below to activate your account "
+                f"(valid for 24 hours):</p>"
                 f'<p><a href="{activation_link}">Activate Account</a></p>'
             ),
         )
@@ -169,7 +171,8 @@ class AccountsService:
             to_email=user.email,
             subject="New account activation link",
             body_text=(
-                f"Here is your new activation link (valid for 24 hours): {activation_link}"
+                f"Here is your new activation link "
+                f"(valid for 24 hours): {activation_link}"
             ),
             body_html=(
                 f"<p>Here is your new activation link (valid for 24 hours):</p>"
@@ -262,7 +265,8 @@ class AccountsService:
         await self.session.commit()
 
     async def request_password_reset(self, email: str) -> None:
-        """Generate a password reset token and dispatch email if user exists and is active."""
+        """Generate a password reset token and dispatch email
+        if user exists and is active."""
         user = await self.session.scalar(select(User).where(User.email == email))
         if not user or not user.is_active:
             # Protect against email enumeration
@@ -283,11 +287,17 @@ class AccountsService:
         self.session.add(reset_token)
         await self.session.commit()
 
-        reset_link = f"http://localhost:8000/api/v1/accounts/password-reset/confirm?token={token_str}"
+        reset_link = (
+            f"http://localhost:8000/api/v1/accounts/password-reset/confirm?"
+            f"token={token_str}"
+        )
         send_email_task.delay(
             to_email=user.email,
             subject="Reset your password",
-            body_text=f"Use this link to reset your password (valid for 1 hour): {reset_link}",
+            body_text=(
+                f"Use this link to reset your password (valid for 1 hour): "
+                f"{reset_link}"
+            ),
             body_html=(
                 f"<p>You requested a password reset for your Online Cinema account.</p>"
                 f'<p><a href="{reset_link}">Reset Password</a></p>'

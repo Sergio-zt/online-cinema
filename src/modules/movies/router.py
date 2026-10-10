@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,7 +60,7 @@ def get_movies_service(
 )
 async def list_genres(
     service: Annotated[MoviesService, Depends(get_movies_service)],
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Retrieve list of genres along with the count of movies in each genre."""
     return await service.list_genres_with_counts()
 
@@ -85,7 +85,10 @@ async def list_movies(
     certification_id: Optional[int] = Query(default=None),
     sort_by: Optional[str] = Query(
         default="imdb_desc",
-        description="Sort by: price_asc, price_desc, year_asc, year_desc, imdb_asc, imdb_desc, votes_desc",
+        description=(
+            "Sort by: price_asc, price_desc, year_asc, year_desc, "
+            "imdb_asc, imdb_desc, votes_desc"
+        ),
     ),
 ) -> PaginatedResponse[MovieListItem]:
     """Browse catalog with full filtering, sorting, searching, and pagination."""

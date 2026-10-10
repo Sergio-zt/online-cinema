@@ -19,7 +19,8 @@ class OrdersService:
         self.session = session
 
     async def create_order_from_cart(self, user_id: int) -> OrderResponse:
-        """Create a new order from current cart items with validations and price locking."""
+        """Create a new order from current cart items with
+        validations and price locking."""
         cart_query = (
             select(Cart)
             .where(Cart.user_id == user_id)
@@ -79,7 +80,9 @@ class OrdersService:
             if not movie:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Movie with ID {cart_item.movie_id} is no longer available.",
+                    detail=(
+                        f"Movie with ID {cart_item.movie_id} is " "no longer available."
+                    ),
                 )
             total_amount += movie.price
             order_items_to_add.append(
@@ -155,7 +158,10 @@ class OrdersService:
         if order.status != OrderStatusEnum.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only pending orders can be canceled. Paid orders require a refund request.",
+                detail=(
+                    "Only pending orders can be canceled. "
+                    "Paid orders require a refund request."
+                ),
             )
 
         order.status = OrderStatusEnum.CANCELED

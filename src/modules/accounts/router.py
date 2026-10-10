@@ -92,7 +92,10 @@ async def resend_activation(
     """Resend a new activation link if the previous one expired."""
     await service.resend_activation_token(data.email)
     return MessageResponse(
-        message="If the account exists and is inactive, a new activation email has been sent."
+        message=(
+            "If the account exists and is inactive,"
+            "a new activation email has been sent."
+        )
     )
 
 
@@ -118,7 +121,8 @@ async def refresh_token(
     data: RefreshTokenRequest,
     service: Annotated[AccountsService, Depends(get_accounts_service)],
 ) -> AccessTokenResponse:
-    """Exchange a valid refresh token for a newly issued access token with shorter TTL."""
+    """Exchange a valid refresh token for a newly
+    issued access token with shorter TTL."""
     return await service.refresh_access_token(data.refresh_token)
 
 
@@ -163,7 +167,10 @@ async def request_password_reset(
     """Send a password reset link to user's registered and active email."""
     await service.request_password_reset(data.email)
     return MessageResponse(
-        message="If the email is registered and active, a password reset link has been sent."
+        message=(
+            "If the email is registered and active,"
+            "a password reset link has been sent."
+        )
     )
 
 

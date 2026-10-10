@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Header, Query, Request, status
+from fastapi import APIRouter, Depends, Header, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_async_session
@@ -65,7 +65,8 @@ async def simulate_payment(
     current_user: Annotated[User, Depends(get_current_active_user)],
     service: Annotated[PaymentsService, Depends(get_payments_service)],
 ) -> PaymentResponse:
-    """Local development endpoint to complete order payment without external Stripe calls."""
+    """Local development endpoint to complete order
+    payment without external Stripe calls."""
     payment = await service.complete_order_payment(
         order_id=order_id,
         user_id=current_user.id,

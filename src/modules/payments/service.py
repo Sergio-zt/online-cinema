@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Optional
 
 import stripe
@@ -57,10 +56,13 @@ class PaymentsService:
         if order.status != OrderStatusEnum.PENDING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Order is not in pending status (current status: {order.status.value}).",
+                detail=(
+                    f"Order is not in pending status (current status: "
+                    f"{order.status.value})."
+                ),
             )
 
-        line_items = []
+        line_items: list[stripe.checkout.Session.CreateParamsLineItem] = []
         for item in order.items:
             movie_name = item.movie.name if item.movie else f"Movie #{item.movie_id}"
             unit_amount = int(item.price_at_order * 100)
@@ -82,7 +84,10 @@ class PaymentsService:
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
-                success_url=f"http://localhost:8000/api/v1/payments/success?session_id={{CHECKOUT_SESSION_ID}}",
+                success_url=(
+                    "http://localhost:8000/api/v1/payments/success?"
+                    "session_id={CHECKOUT_SESSION_ID}"
+                ),
                 cancel_url="http://localhost:8000/api/v1/payments/cancel",
                 client_reference_id=str(order.id),
                 metadata={
@@ -97,8 +102,11 @@ class PaymentsService:
         except Exception as exc:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Failed to communicate with Stripe payment provider: {str(exc)}",
-            )
+                detail=(
+                    f"Failed to communicate with "
+                    f"Stripe payment provider: {str(exc)}"
+                ),
+            ) from exc
 
     async def complete_order_payment(
         self,
@@ -106,7 +114,8 @@ class PaymentsService:
         user_id: int,
         external_payment_id: Optional[str] = None,
     ) -> Payment:
-        """Mark order as paid, create payment records, clear cart, and send confirmation email."""
+        """Mark order as paid, create payment records,
+        clear cart, and send confirmation email."""
         query = (
             select(Order)
             .where(Order.id == order_id)
@@ -163,12 +172,14 @@ class PaymentsService:
                 to_email=order.user.email,
                 subject=f"Payment Confirmation - Order #{order.id}",
                 body_text=(
-                    f"Thank you for your purchase! Order #{order.id} for ${order.total_amount} "
+                    f"Thank you for your purchase! "
+                    f"Order #{order.id} for ${order.total_amount} "
                     f"has been successfully paid. Movies: {movie_titles}."
                 ),
                 body_html=(
                     f"<h2>Payment Successful!</h2>"
-                    f"<p>Order <strong>#{order.id}</strong> has been successfully processed.</p>"
+                    f"<p>Order <strong>#{order.id}</strong> "
+                    f"has been successfully processed.</p>"
                     f"<p>Total amount paid: <strong>${order.total_amount}</strong></p>"
                     f"<p>Purchased movies: <em>{movie_titles}</em></p>"
                 ),
@@ -183,14 +194,14 @@ class PaymentsService:
         event: dict[str, Any]
         if sig_header and settings.STRIPE_WEBHOOK_SECRET != "whsec_dummy_key":
             try:
-                event = stripe.Webhook.construct_event(
+                event = stripe.Webhook.construct_event(  # type: ignore[no-untyped-call]
                     payload_bytes, sig_header, settings.STRIPE_WEBHOOK_SECRET
                 )
             except Exception as exc:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Webhook signature verification failed: {str(exc)}",
-                )
+                ) from exc
         else:
             event = json.loads(payload_bytes.decode("utf-8"))
 

@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +25,8 @@ docs_security = HTTPBasic()
 def verify_docs_credentials(
     credentials: Annotated[HTTPBasicCredentials, Depends(docs_security)],
 ) -> str:
-    """Validate HTTP Basic credentials to restrict Swagger/OpenAPI documentation access."""
+    """Validate HTTP Basic credentials to restrict
+    Swagger/OpenAPI documentation access."""
     correct_username = secrets.compare_digest(credentials.username, "admin")
     correct_password = secrets.compare_digest(credentials.password, "cinema_admin")
     if not (correct_username and correct_password):
@@ -75,7 +76,7 @@ app.include_router(payments_router, prefix="/api/v1")
 @app.get("/docs", include_in_schema=False)
 async def get_swagger_ui(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> HTMLResponse:
     """Protected Swagger UI documentation endpoint."""
     return get_swagger_ui_html(
         openapi_url="/openapi.json", title="Online Cinema API - Docs"
@@ -85,7 +86,7 @@ async def get_swagger_ui(
 @app.get("/redoc", include_in_schema=False)
 async def get_redoc_ui(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> HTMLResponse:
     """Protected ReDoc documentation endpoint."""
     return get_redoc_html(
         openapi_url="/openapi.json", title="Online Cinema API - ReDoc"
@@ -95,7 +96,7 @@ async def get_redoc_ui(
 @app.get("/openapi.json", include_in_schema=False)
 async def get_open_api_schema(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> JSONResponse:
     """Protected OpenAPI specification endpoint."""
     return JSONResponse(
         get_openapi(title=app.title, version=app.version, routes=app.routes)
