@@ -24,7 +24,9 @@ from src.modules.movies.schemas import (
     CertificationCreate,
     CertificationResponse,
     DirectorCreate,
+    DirectorResponse,
     GenreCreate,
+    GenreResponse,
     MovieCreate,
     MovieDetailResponse,
     MovieListItem,
@@ -32,6 +34,7 @@ from src.modules.movies.schemas import (
     MovieUpdate,
     PaginatedResponse,
     StarCreate,
+    StarResponse,
 )
 
 
@@ -279,9 +282,9 @@ class MoviesService:
             gross=movie.gross,
             description=movie.description,
             certification=CertificationResponse.model_validate(movie.certification),
-            genres=movie.genres,
-            directors=movie.directors,
-            stars=movie.stars,
+            genres=[GenreResponse.model_validate(g) for g in movie.genres],
+            directors=[DirectorResponse.model_validate(d) for d in movie.directors],
+            stars=[StarResponse.model_validate(s) for s in movie.stars],
             likes_count=likes_count,
             dislikes_count=dislikes_count,
             average_user_rating=average_user_rating,
