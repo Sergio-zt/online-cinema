@@ -76,7 +76,7 @@ app.include_router(payments_router, prefix="/api/v1")
 @app.get("/docs", include_in_schema=False)
 async def get_swagger_ui(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> None:
     """Protected Swagger UI documentation endpoint."""
     return get_swagger_ui_html(
         openapi_url="/openapi.json", title="Online Cinema API - Docs"
@@ -86,7 +86,7 @@ async def get_swagger_ui(
 @app.get("/redoc", include_in_schema=False)
 async def get_redoc_ui(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> None:
     """Protected ReDoc documentation endpoint."""
     return get_redoc_html(
         openapi_url="/openapi.json", title="Online Cinema API - ReDoc"
@@ -96,7 +96,7 @@ async def get_redoc_ui(
 @app.get("/openapi.json", include_in_schema=False)
 async def get_open_api_schema(
     username: Annotated[str, Depends(verify_docs_credentials)],
-):
+) -> None:
     """Protected OpenAPI specification endpoint."""
     return JSONResponse(
         get_openapi(title=app.title, version=app.version, routes=app.routes)

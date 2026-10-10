@@ -8,7 +8,9 @@ from celery import shared_task
 from src.core.config import settings
 
 
-@shared_task(name="src.tasks.email.send_email_task")
+@shared_task(  # type: ignore[untyped-decorator]
+    name="src.tasks.email.send_email_task"
+)
 def send_email_task(
     to_email: str,
     subject: str,

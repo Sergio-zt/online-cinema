@@ -60,7 +60,7 @@ def get_movies_service(
 )
 async def list_genres(
     service: Annotated[MoviesService, Depends(get_movies_service)],
-) -> list[dict]:
+) -> list[dict[str]]:
     """Retrieve list of genres along with the count of movies in each genre."""
     return await service.list_genres_with_counts()
 
