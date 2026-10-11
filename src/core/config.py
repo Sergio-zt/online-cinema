@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables with fail-fast production validation."""
+    """Application settings loaded from environment variables
+    with fail-fast production validation."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -72,7 +73,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":
-        """Fail fast if insecure development defaults are detected in non-development environments."""
+        """Fail fast if insecure development defaults are detected in
+        non-development environments."""
         if self.ENVIRONMENT.lower() != "development":
             if self.DEBUG:
                 raise ValueError("DEBUG must be False in production environments.")
@@ -80,7 +82,8 @@ class Settings(BaseSettings):
             insecure_key = "insecure-dev-secret-key-change-in-production"
             if not self.SECRET_KEY or self.SECRET_KEY == insecure_key:
                 raise ValueError(
-                    "SECRET_KEY must be explicitly configured with a secure value in production."
+                    "SECRET_KEY must be explicitly configured"
+                    "with a secure value in production."
                 )
 
             if self.POSTGRES_PASSWORD == "cinema_password":
